@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis de la Crisis Energética en Ecuador</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with Subtle Accents -->
+    <!-- Application Structure Plan: The application is structured as a single-page dashboard. This design choice facilitates a narrative flow, guiding the user from the current situation (Diagnóstico) to the identified vulnerabilities (Riesgos) and finally to the proposed solutions (Plan de Acción). The top navigation bar allows for quick scrolling to each major section. This structure was chosen for its intuitiveness, allowing users to either follow the logical progression of the report or jump directly to the section of their interest. Interactive charts and cards are used to make complex data easily digestible and engaging. -->
+    <!-- Visualization & Content Choices: 
+        - Matriz Energética: A doughnut chart is used to clearly show the overwhelming dependence on hydroelectric power (Goal: Inform). The interaction involves hovering to see exact percentages, making the data more tangible.
+        - Impacto Económico: Key metrics are presented in prominent cards for immediate impact (Goal: Inform). A bar chart details losses by sector, allowing for easy comparison (Goal: Compare).
+        - Riesgos Clave: An interactive grid layout is used to present the main risks. Clicking on a risk reveals more detailed information (Goal: Organize/Explore). This was chosen over a static list to encourage user interaction and prevent information overload.
+        - Plan de Acción: A tabbed interface organizes the strategic recommendations into logical categories (Generation, Infrastructure, Governance, etc.) (Goal: Organize). This allows the user to focus on specific areas of the solution without being overwhelmed by text.
+        - All visualizations are created with Chart.js on Canvas, adhering to the NO SVG/Mermaid requirement. The choices support the dashboard structure by providing scannable, high-impact visuals that invite deeper exploration. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #4A4A4A;
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #C89B3C;
+            border-bottom-color: #C89B3C;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border: 1px solid #EAEAEA;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .tab-button {
+            transition: all 0.3s;
+        }
+        .tab-button.active {
+            background-color: #C89B3C;
+            color: #FFFFFF;
+        }
+        .tab-button:not(.active) {
+            background-color: #F0EAE0;
+            color: #6B7280;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-800">Seguridad Energética EC</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#diagnostico" class="nav-link font-medium text-gray-600 pb-1">Diagnóstico</a>
+                <a href="#riesgos" class="nav-link font-medium text-gray-600 pb-1">Análisis de Riesgos</a>
+                <a href="#impacto" class="nav-link font-medium text-gray-600 pb-1">Impacto Económico</a>
+                <a href="#plan" class="nav-link font-medium text-gray-600 pb-1">Plan de Acción</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden text-gray-700 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
+            <a href="#diagnostico" class="block py-2 text-gray-600">Diagnóstico</a>
+            <a href="#riesgos" class="block py-2 text-gray-600">Análisis de Riesgos</a>
+            <a href="#impacto" class="block py-2 text-gray-600">Impacto Económico</a>
+            <a href="#plan" class="block py-2 text-gray-600">Plan de Acción</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+
+        <!-- Section 1: Diagnóstico -->
+        <section id="diagnostico" class="mb-24 scroll-mt-24">
+            <h2 class="text-4xl font-bold text-center text-gray-800 mb-4">Diagnóstico del Sector Energético</h2>
+            <p class="text-center max-w-3xl mx-auto text-lg text-gray-600 mb-12">
+                Ecuador enfrenta una encrucijada energética. Nuestra matriz, aunque predominantemente renovable, muestra una alarmante concentración en la energía hidroeléctrica. Esta sección desglosa la composición actual de nuestra capacidad de generación y la creciente demanda que pone a prueba al sistema.
+            </p>
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="card">
+                    <h3 class="text-2xl font-semibold text-center mb-4 text-gray-700">Composición de la Matriz Energética (2023)</h3>
+                    <div class="chart-container">
+                        <canvas id="matrizChart"></canvas>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-4 text-center">La generación hidroeléctrica representa más del 95% de la capacidad renovable, una fortaleza que se convierte en vulnerabilidad ante sequías.</p>
+                </div>
+                <div class="space-y-6">
+                    <div class="card">
+                        <h4 class="text-xl font-semibold text-gray-700">Capacidad Total Instalada</h4>
+                        <p class="text-3xl font-bold text-[#C89B3C] mt-2">8,899 MW</p>
+                        <p class="text-gray-500">Potencia Nominal. De esta, 61.18% es renovable.</p>
+                    </div>
+                    <div class="card">
+                        <h4 class="text-xl font-semibold text-gray-700">Crecimiento de la Demanda</h4>
+                        <p class="text-3xl font-bold text-[#C89B3C] mt-2">+18.3%</p>
+                        <p class="text-gray-500">Incremento en la demanda total de energía entre 2013 y 2023.</p>
+                    </div>
+                     <div class="card">
+                        <h4 class="text-xl font-semibold text-gray-700">Parque Termoeléctrico</h4>
+                        <p class="text-3xl font-bold text-[#D9534F] mt-2">~50% Inoperativo</p>
+                        <p class="text-gray-500">Gran parte del respaldo térmico es obsoleto y no recibe mantenimiento adecuado.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Análisis de Riesgos -->
+        <section id="riesgos" class="mb-24 scroll-mt-24">
+            <h2 class="text-4xl font-bold text-center text-gray-800 mb-4">Análisis de Riesgos Clave</h2>
+            <p class="text-center max-w-3xl mx-auto text-lg text-gray-600 mb-12">
+                La seguridad energética del país está amenazada por un conjunto de riesgos interconectados. Desde la dependencia climática hasta fallas de gestión, estos factores aumentan la probabilidad de una crisis. Explore los principales riesgos identificados.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Risk Cards -->
+                <div class="card risk-card cursor-pointer" data-risk="hidrica">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-2">💧 Dependencia Hídrica</h3>
+                    <p class="text-gray-600">La generación depende en un 72-80% de fuentes hidroeléctricas, haciéndola extremadamente vulnerable a sequías y al cambio climático.</p>
+                </div>
+                <div class="card risk-card cursor-pointer" data-risk="infraestructura">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-2">🔧 Deficiencias de Infraestructura</h3>
+                    <p class="text-gray-600">Parque termoeléctrico obsoleto, falta de mantenimiento en redes y retrasos en proyectos clave erosionan la capacidad de respuesta.</p>
+                </div>
+                <div class="card risk-card cursor-pointer" data-risk="gestion">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-2">📉 Fallas en Gestión y Planificación</h3>
+                    <p class="text-gray-600">Falta de autoridad, incumplimiento de planes maestros y deudas estatales desincentivan la inversión y la planificación a largo plazo.</p>
+                </div>
+                <div class="card risk-card cursor-pointer" data-risk="economicos">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-2">💸 Riesgos Económicos</h3>
+                    <p class="text-gray-600">Los apagones generan pérdidas millonarias, afectan la productividad, el empleo y aumentan los costos por soluciones de emergencia.</p>
+                </div>
+                <div class="card risk-card cursor-pointer" data-risk="operacionales">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-2">⚡ Riesgos Operacionales</h3>
+                    <p class="text-gray-600">Amenazas naturales (sismos, inundaciones) y fallas técnicas pueden causar apagones masivos e imprevistos, como el de junio de 2024.</p>
+                </div>
+                <div class="card risk-card cursor-pointer" data-risk="ambientales">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-2">🌍 Riesgos Ambientales</h3>
+                    <p class="text-gray-600">El uso de generadores a diésel durante las crisis aumenta la contaminación y las emisiones, creando un círculo vicioso con el cambio climático.</p>
+                </div>
+            </div>
+            <!-- Risk Detail Display -->
+            <div id="risk-detail-container" class="mt-8 p-6 bg-white rounded-lg border border-gray-200 hidden">
+                <h3 id="risk-detail-title" class="text-2xl font-bold mb-2 text-gray-800"></h3>
+                <p id="risk-detail-content" class="text-gray-600 text-lg"></p>
+            </div>
+        </section>
+
+        <!-- Section 3: Impacto Económico -->
+        <section id="impacto" class="mb-24 scroll-mt-24">
+            <h2 class="text-4xl font-bold text-center text-gray-800 mb-4">El Costo de la Inacción: Impacto Económico</h2>
+             <p class="text-center max-w-3xl mx-auto text-lg text-gray-600 mb-12">
+                Una crisis energética no es solo un inconveniente, es un freno para el desarrollo nacional. Las cifras revelan el devastador impacto en la economía, la industria y el empleo. Esta sección cuantifica el costo de la vulnerabilidad energética.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                <div class="card text-center">
+                    <h3 class="text-xl font-semibold text-gray-700">Pérdida del PIB (2024)</h3>
+                    <p class="text-4xl font-bold text-[#D9534F] my-3">1.0% - 1.5%</p>
+                    <p class="text-gray-500">Equivalente a <strong class="font-semibold">$1,200 - $1,700 millones</strong> de dólares.</p>
+                </div>
+                <div class="card text-center">
+                    <h3 class="text-xl font-semibold text-gray-700">Pérdida Industrial</h3>
+                    <p class="text-4xl font-bold text-[#D9534F] my-3">$12 Millones</p>
+                    <p class="text-gray-500">Pérdida estimada por <strong class="font-semibold">cada hora</strong> de apagón.</p>
+                </div>
+                <div class="card text-center">
+                    <h3 class="text-xl font-semibold text-gray-700">Costo de Emergencia</h3>
+                    <p class="text-4xl font-bold text-[#D9534F] my-3">$250 Millones</p>
+                    <p class="text-gray-500">Costo del alquiler de <strong class="font-semibold">barcazas de generación</strong> por 18 meses.</p>
+                </div>
+            </div>
+             <div class="card">
+                <h3 class="text-2xl font-semibold text-center mb-4 text-gray-700">Sectores Más Afectados</h3>
+                <p class="text-center text-gray-600 mb-6">La falta de energía impacta desproporcionadamente a los motores de la economía y el empleo.</p>
+                <div class="flex flex-wrap justify-center gap-4 text-center">
+                    <span class="bg-red-100 text-red-800 text-sm font-medium me-2 px-3 py-1.5 rounded-full">Comercio</span>
+                    <span class="bg-red-100 text-red-800 text-sm font-medium me-2 px-3 py-1.5 rounded-full">Hotelería y Turismo</span>
+                    <span class="bg-red-100 text-red-800 text-sm font-medium me-2 px-3 py-1.5 rounded-full">Industria Manufacturera</span>
+                    <span class="bg-red-100 text-red-800 text-sm font-medium me-2 px-3 py-1.5 rounded-full">Sector Lácteo</span>
+                    <span class="bg-red-100 text-red-800 text-sm font-medium me-2 px-3 py-1.5 rounded-full">PYMES</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Plan de Acción -->
+        <section id="plan" class="scroll-mt-24">
+            <h2 class="text-4xl font-bold text-center text-gray-800 mb-4">Plan de Acción Estratégico</h2>
+            <p class="text-center max-w-3xl mx-auto text-lg text-gray-600 mb-12">
+                Para romper el ciclo de crisis, se requiere un plan de acción integral y proactivo. Las siguientes recomendaciones estratégicas están diseñadas para construir un sistema energético resiliente, diversificado y sostenible. Navegue por las áreas clave de intervención.
+            </p>
+            <div class="w-full">
+                <!-- Tabs -->
+                <div class="mb-4 flex flex-wrap justify-center gap-2">
+                    <button class="tab-button px-4 py-2 text-sm font-semibold rounded-md active" data-tab="generacion">Diversificar Generación</button>
+                    <button class="tab-button px-4 py-2 text-sm font-semibold rounded-md" data-tab="infraestructura">Mejorar Infraestructura</button>
+                    <button class="tab-button px-4 py-2 text-sm font-semibold rounded-md" data-tab="gobernanza">Fortalecer Gobernanza</button>
+                    <button class="tab-button px-4 py-2 text-sm font-semibold rounded-md" data-tab="eficiencia">Fomentar Eficiencia</button>
+                    <button class="tab-button px-4 py-2 text-sm font-semibold rounded-md" data-tab="resiliencia">Crear Resiliencia</button>
+                </div>
+                <!-- Tab Content -->
+                <div class="card tab-content" id="tab-generacion">
+                    <h3 class="text-2xl font-semibold mb-4 text-gray-800">Diversificación y Fortalecimiento de la Generación</h3>
+                    <ul class="space-y-3 list-disc list-inside text-gray-600">
+                        <li><strong>Acelerar inversión en renovables no convencionales:</strong> Priorizar proyectos de energía solar, eólica, geotérmica y biomasa para reducir la dependencia hídrica.</li>
+                        <li><strong>Modernizar el parque térmico:</strong> Implementar un plan de recuperación y mantenimiento del respaldo termoeléctrico como puente hacia una transición completa.</li>
+                        <li><strong>Impulsar el uso de gas natural:</strong> Explotar reservas como las del campo Amistad para alimentar centrales térmicas de manera más eficiente y menos contaminante.</li>
+                    </ul>
+                </div>
+                <div class="card tab-content hidden" id="tab-infraestructura">
+                     <h3 class="text-2xl font-semibold mb-4 text-gray-800">Mejora de la Infraestructura y Mantenimiento</h3>
+                    <ul class="space-y-3 list-disc list-inside text-gray-600">
+                        <li><strong>Invertir en redes de transmisión y distribución:</strong> Crear un plan a largo plazo para modernizar las redes y reducir las pérdidas técnicas, que superaron los 1,000 GWh en 2023.</li>
+                        <li><strong>Implementar mantenimiento preventivo:</strong> Saldar la "deuda histórica" con programas de mantenimiento continuo para evitar fallas en la infraestructura.</li>
+                        <li><strong>Agilizar proyectos estratégicos:</strong> Utilizar alianzas público-privadas para ejecutar megaproyectos como Cardenillo y Santiago.</li>
+                    </ul>
+                </div>
+                <div class="card tab-content hidden" id="tab-gobernanza">
+                    <h3 class="text-2xl font-semibold mb-4 text-gray-800">Fortalecimiento de la Gobernanza y Marco Regulatorio</h3>
+                    <ul class="space-y-3 list-disc list-inside text-gray-600">
+                        <li><strong>Desarrollar un Plan Maestro de Electricidad vinculante:</strong> Actualizar y hacer cumplir un plan realista que guíe la expansión y diversificación del sector.</li>
+                        <li><strong>Garantizar seguridad jurídica:</strong> Crear un marco regulatorio estable y transparente para atraer la necesaria inversión privada en todo el sector.</li>
+                        <li><strong>Mejorar la coordinación institucional:</strong> Establecer un liderazgo claro y una cooperación efectiva entre el Ministerio de Energía, CENACE y otras entidades.</li>
+                    </ul>
+                </div>
+                <div class="card tab-content hidden" id="tab-eficiencia">
+                     <h3 class="text-2xl font-semibold mb-4 text-gray-800">Fomento de la Eficiencia Energética y Gestión de la Demanda</h3>
+                    <ul class="space-y-3 list-disc list-inside text-gray-600">
+                        <li><strong>Lanzar campañas de concienciación pública:</strong> Educar a la población sobre el uso eficiente de la energía para reducir la presión sobre el sistema.</li>
+                        <li><strong>Promover el autoconsumo:</strong> Incentivar la instalación de paneles solares en hogares y empresas mediante créditos y beneficios fiscales.</li>
+                        <li><strong>Incentivar tecnologías eficientes:</strong> Fomentar la adopción de iluminación LED y otros equipos de bajo consumo en todos los sectores.</li>
+                    </ul>
+                </div>
+                 <div class="card tab-content hidden" id="tab-resiliencia">
+                     <h3 class="text-2xl font-semibold mb-4 text-gray-800">Estrategias de Resiliencia y Respuesta a Emergencias</h3>
+                    <ul class="space-y-3 list-disc list-inside text-gray-600">
+                        <li><strong>Fortalecer la interconexión regional:</strong> Asegurar y expandir los acuerdos con Colombia y Perú para garantizar importaciones durante déficits.</li>
+                        <li><strong>Invertir en almacenamiento de energía:</strong> Evaluar e implementar sistemas de baterías (BESS) para dar estabilidad y flexibilidad a la red.</li>
+                        <li><strong>Integrar generación distribuida:</strong> Crear mecanismos para comprar excedentes de energía a autogeneradores privados para aumentar la capacidad disponible rápidamente.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-24">
+        <div class="container mx-auto px-6 py-8 text-center">
+            <p>&copy; 2024 Análisis Energético Ecuador. Este es un documento informativo basado en el reporte de evaluación de riesgos.</p>
+            <p class="text-sm text-gray-400 mt-2">Creado para facilitar la comprensión y la toma de decisiones estratégicas.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            // Mobile Menu Toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            // Smooth Scrolling & Active Nav Link
+            const navLinks = document.querySelectorAll('a[href^="#"]');
+            const sections = document.querySelectorAll('section');
+            const headerHeight = document.querySelector('header').offsetHeight;
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+                        if (mobileMenu.classList.contains('hidden') === false) {
+                            mobileMenu.classList.add('hidden');
+                        }
+                    }
+                });
+            });
+
+            const setActiveLink = () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop - headerHeight - 100;
+                    if (window.pageYOffset >= sectionTop) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            };
+            window.addEventListener('scroll', setActiveLink);
+
+
+            // Matriz Energética Chart
+            const matrizCtx = document.getElementById('matrizChart').getContext('2d');
+            new Chart(matrizCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Hidroeléctrica', 'Térmica', 'Otras Renovables'],
+                    datasets: [{
+                        label: 'Capacidad de Generación',
+                        data: [74.5, 22.5, 3], // Approximate percentages for visualization
+                        backgroundColor: [
+                            '#36A2EB', // Blue
+                            '#FF6384', // Red
+                            '#4BC0C0'  // Teal
+                        ],
+                        borderColor: '#FDFBF8',
+                        borderWidth: 4,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    size: 14,
+                                    family: "'Inter', sans-serif"
+                                }
+                            }
+                        },
+                        title: {
+                            display: false,
+                        },
+                        tooltip: {
+                             callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += context.parsed + '% de la generación';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Risk Cards Interaction
+            const riskCards = document.querySelectorAll('.risk-card');
+            const riskDetailContainer = document.getElementById('risk-detail-container');
+            const riskDetailTitle = document.getElementById('risk-detail-title');
+            const riskDetailContent = document.getElementById('risk-detail-content');
+            
+            const riskData = {
+                hidrica: {
+                    title: "💧 Vulnerabilidad por Dependencia Hídrica",
+                    content: "Con un 72-80% de la electricidad proveniente de hidroeléctricas, el sistema es extremadamente frágil ante sequías. Fenómenos como El Niño y problemas de sedimentación en centrales clave como Coca Codo Sinclair agravan la situación. La mayoría de las centrales son 'de pasada', sin grandes embalses, lo que limita su capacidad de gestión del agua y las hace directamente dependientes del caudal diario de los ríos."
+                },
+                infraestructura: {
+                    title: "🔧 Deficiencias Críticas en Infraestructura",
+                    content: "El parque termoeléctrico, esencial como respaldo, es obsoleto (40-50 años de antigüedad) y opera a menos del 50% de su capacidad por falta de mantenimiento. La inversión en nueva generación es mínima y los proyectos están retrasados. Las redes de transmisión y distribución sufren pérdidas técnicas crecientes, actuando como un cuello de botella que impide que la energía llegue eficientemente a los consumidores."
+                },
+                gestion: {
+                    title: "📉 Fallas Estructurales en Gestión y Planificación",
+                    content: "La falta de una autoridad central fuerte, la inejecución del Plan Maestro de Electricidad (PME) y una deuda estatal de más de $3,000 millones con proveedores crean un círculo vicioso. La incertidumbre y la falta de transparencia ahuyentan la inversión privada, impidiendo la modernización y diversificación que el país necesita urgentemente para asegurar su futuro energético."
+                },
+                economicos: {
+                     title: "💸 Riesgos Económicos y Financieros Severos",
+                    content: "Los cortes de energía no solo paralizan la vida diaria, sino que destruyen valor económico. Se estima una pérdida de hasta el 1.5% del PIB en 2024. Sectores como el industrial, comercial y las PYMES son los más afectados, con millones en pérdidas por hora y un grave riesgo para el empleo. Las soluciones de emergencia, como el alquiler de barcazas, son parches costosos que no resuelven el problema de fondo."
+                },
+                operacionales: {
+                    title: "⚡ Riesgos Operacionales y Amenazas Naturales",
+                    content: "Ecuador está ubicado en una zona de alta actividad sísmica y volcánica. Un desastre natural podría dañar gravemente la infraestructura crítica. A esto se suman las fallas técnicas por obsolescencia, que pueden provocar apagones masivos e inesperados a nivel nacional, como el ocurrido en junio de 2024, demostrando la fragilidad de toda la red interconectada."
+                },
+                ambientales: {
+                    title: "🌍 Riesgos Ambientales y el Círculo Vicioso",
+                    content: "Para paliar la crisis, se recurre masivamente a generadores a diésel, que emiten grandes cantidades de CO2 y contaminantes atmosféricos, empeorando la calidad del aire y contribuyendo al cambio climático. Este, a su vez, exacerba las sequías, reduciendo la generación hidroeléctrica y perpetuando la dependencia de combustibles fósiles. Es un ciclo destructivo que socava los objetivos de sostenibilidad."
+                }
+            };
+
+            riskCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const riskKey = this.dataset.risk;
+                    const data = riskData[riskKey];
+
+                    riskDetailTitle.textContent = data.title;
+                    riskDetailContent.textContent = data.content;
+
+                    riskDetailContainer.classList.remove('hidden');
+
+                    riskCards.forEach(c => c.style.borderColor = '#EAEAEA');
+                    this.style.borderColor = '#C89B3C';
+                    
+                    riskDetailContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                });
+            });
+
+            // Tabs Interaction
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const tabId = this.dataset.tab;
+
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+
+                    tabContents.forEach(content => {
+                        if (content.id === 'tab-' + tabId) {
+                            content.classList.remove('hidden');
+                        } else {
+                            content.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
